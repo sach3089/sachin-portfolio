@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://sachin-chauhan-engineering.alivenote64.chatgpt.site/sitemap.xml
+Sitemap: https://sach3089.github.io/sachin-portfolio/sitemap.xml

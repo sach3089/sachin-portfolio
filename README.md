@@ -18,7 +18,7 @@ Open http://127.0.0.1:4173. Restart after editing files to rebuild.
 npm run build
 ```
 
-Publish the contents of `dist/` to any static host. The generated site uses root-relative paths, so deploy at the domain root, rather than under a repository subpath. The local server supports directory URLs and a custom 404 page.
+Publish the contents of `dist/` to any static host. The generator supports both domain-root and repository-subpath hosting using SITE_URL. The local server supports directory URLs and a custom 404 page.
 
 For a different domain, set its origin before building so canonical URLs, RSS, sitemap, and sharing metadata use the correct address:
 
@@ -63,8 +63,10 @@ Supported Markdown: paragraphs, headings, unordered lists, fenced code blocks, i
 
 ## Hosting
 
-Build with `npm run build` and deploy `dist/` to a static host. No application server or database is required. This repository includes the full source and static output, including the résumé and social assets.
+GitHub Pages deployment is configured in `.github/workflows/pages.yml`. A push to `main` builds the Markdown content and publishes `dist/` automatically. No database, custom server, or deployment credentials are required.
 
-The site uses root-relative URLs. Host at a domain root (custom domain or user-level Pages site), or configure your host to serve this folder at the root. Set `SITE_URL` to the final origin when building so canonical URLs, RSS, and sitemap use the right domain.
+Hosting address: https://sach3089.github.io/sachin-portfolio/
 
-No live hosted domain has been confirmed yet. The original Sites project metadata is local-only and is excluded from this GitHub repository. The repository is portable to any static hosting service.
+For a custom domain, configure it in GitHub Pages settings, add the DNS records supplied by GitHub, and update the workflow's SITE_URL. The generator adjusts navigation, assets, canonical URLs, RSS, and sitemap for the origin and optional path in SITE_URL.
+
+Local development still uses npm run dev. Original Sites metadata is local-only and excluded from GitHub.
