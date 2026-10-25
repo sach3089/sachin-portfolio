@@ -17,6 +17,10 @@ This guide describes a hypothetical architecture. The examples, payloads, code, 
 
 ## End-to-end architecture: from a legacy contract to an HTTP API
 
+![End-to-end socket-to-REST system design: legacy TCP path, Spring Boot on ECS, downstream integrations, delivery, and observability](/socket-rest-system-design.svg)
+
+The blue and green arrows show logical request and response paths. The dashed boundary groups the application tasks, while the lower panels show delivery and telemetry. The deployment and observability tools are example choices.
+
 The two paths below show the same conceptual business operation before and after migration. They are alternative designs, not two hops of the same request. The actual caller also needs an HTTP implementation or a compatibility adapter; an existing socket client cannot simply change its destination and start speaking HTTP.
 
 ```flow

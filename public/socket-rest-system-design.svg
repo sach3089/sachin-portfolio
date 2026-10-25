@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1150" viewBox="0 0 1500 1150" role="img" aria-labelledby="title description"><title id="title">Socket to REST migration — conceptual system design</title><desc id="description">Before: client exchanges custom records with a mainframe listener and business program. After: HTTP client sends HTTPS to a load balancer, then Spring Boot on ECS, then a database or downstream service. GitHub Actions delivers containers through ECR to ECS. OpenTelemetry and container logs provide telemetry to monitoring backends. All components are illustrative.</desc><defs><marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto-start-reverse"><path d="M1 1L10 5L1 9" fill="none" stroke="#4277aa" stroke-width="1.5"/></marker><marker id="green" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto-start-reverse"><path d="M1 1L10 5L1 9" fill="none" stroke="#4c9061" stroke-width="1.5"/></marker><marker id="orange" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto-start-reverse"><path d="M1 1L10 5L1 9" fill="none" stroke="#bb853b" stroke-width="1.5"/></marker></defs><rect width="1500" height="1150" fill="#fffefb"/><style>text{font-family:'Comic Sans MS','Trebuchet MS',monospace;fill:#25272a}.small{font-size:16px}.label{font-size:19px}.title{font-size:32px}.sub{font-size:17px;fill:#5b626a}</style>
+<text x="55" y="58" class="title" text-anchor="start"><tspan x="55" dy="0">From sockets to REST APIs</tspan></text>
+<text x="55" y="90" class="sub" text-anchor="start"><tspan x="55" dy="0">A reference architecture for a Spring Boot service on AWS</tspan></text>
+<rect x="40" y="130" width="1420" height="250" rx="23" fill="#f8f9fb" stroke="#34373b" stroke-width="1.4"/>
+<text x="65" y="166" class="label" text-anchor="start"><tspan x="65" dy="0">BEFORE / Custom TCP contract</tspan></text>
+<rect x="75" y="215" width="230" height="90" rx="20" fill="#fff5cc" stroke="#34373b" stroke-width="1.7"/>
+<text x="190.0" y="266.0" class="label" text-anchor="middle"><tspan x="190.0" dy="0">Legacy caller</tspan></text>
+<rect x="495" y="215" width="270" height="90" rx="20" fill="#eee7fa" stroke="#34373b" stroke-width="1.7"/>
+<text x="630.0" y="266.0" class="label" text-anchor="middle"><tspan x="630.0" dy="0">TCP listener</tspan></text>
+<rect x="955" y="215" width="325" height="90" rx="20" fill="#c8dff5" stroke="#34373b" stroke-width="1.7"/>
+<text x="1117.5" y="253.0" class="label" text-anchor="middle"><tspan x="1117.5" dy="0">Business program</tspan><tspan x="1117.5" dy="26">+ data access</tspan></text>
+<path d="M310 260 L490 260" fill="none" stroke="#4c9061" stroke-width="2" marker-end="url(#green)" marker-start="url(#green)"/>
+<text x="400" y="220" class="small" text-anchor="middle"><tspan x="400" dy="0">Custom records</tspan></text>
+<path d="M770 260 L950 260" fill="none" stroke="#4277aa" stroke-width="2" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<text x="860" y="220" class="small" text-anchor="middle"><tspan x="860" dy="0">Dispatch / result</tspan></text>
+<text x="75" y="345" class="sub" text-anchor="start"><tspan x="75" dy="0">Both sides agree on framing, encoding, errors, and connection behavior.</tspan></text>
+<rect x="40" y="415" width="1420" height="450" rx="23" fill="#f8f9fb" stroke="#34373b" stroke-width="1.4"/>
+<text x="65" y="453" class="label" text-anchor="start"><tspan x="65" dy="0">AFTER / HTTP boundary + container deployment</tspan></text>
+<rect x="790" y="490" width="350" height="325" rx="22" fill="#f0f4f9" stroke="#7d8795" stroke-dasharray="7 6"/>
+<text x="810" y="519" class="small" text-anchor="start"><tspan x="810" dy="0">ECS service / private tasks</tspan></text>
+<rect x="75" y="565" width="195" height="105" rx="20" fill="#fff5cc" stroke="#34373b" stroke-width="1.7"/>
+<text x="172.5" y="623.5" class="label" text-anchor="middle"><tspan x="172.5" dy="0">HTTP client</tspan></text>
+<rect x="425" y="555" width="230" height="125" rx="20" fill="#eee7fa" stroke="#34373b" stroke-width="1.7"/>
+<text x="540.0" y="610.5" class="label" text-anchor="middle"><tspan x="540.0" dy="0">Application</tspan><tspan x="540.0" dy="26">Load Balancer</tspan></text>
+<rect x="825" y="555" width="280" height="125" rx="20" fill="#e5c6f0" stroke="#34373b" stroke-width="1.7"/>
+<text x="965.0" y="610.5" class="label" text-anchor="middle"><tspan x="965.0" dy="0">Spring Boot</tspan><tspan x="965.0" dy="26">REST API</tspan></text>
+<rect x="825" y="730" width="280" height="65" rx="20" fill="#fff0ad" stroke="#34373b" stroke-width="1.7"/>
+<text x="965.0" y="768.5" class="label" text-anchor="middle"><tspan x="965.0" dy="0">Service + adapters</tspan></text>
+<rect x="1230" y="555" width="190" height="125" rx="20" fill="#bddcf6" stroke="#34373b" stroke-width="1.7"/>
+<text x="1325.0" y="610.5" class="label" text-anchor="middle"><tspan x="1325.0" dy="0">Database /</tspan><tspan x="1325.0" dy="26">downstream</tspan></text>
+<path d="M275 615 L420 615" fill="none" stroke="#4c9061" stroke-width="2" marker-end="url(#green)" marker-start="url(#green)"/>
+<text x="347" y="565" class="small" text-anchor="middle"><tspan x="347" dy="0">HTTPS request</tspan><tspan x="347" dy="22">HTTP response</tspan></text>
+<path d="M660 615 L820 615" fill="none" stroke="#4277aa" stroke-width="2" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<text x="740" y="563" class="small" text-anchor="middle"><tspan x="740" dy="0">Healthy target</tspan><tspan x="740" dy="22">routing</tspan></text>
+<path d="M965 685 L965 725" fill="none" stroke="#4277aa" stroke-width="2" marker-end="url(#blue)"/>
+<text x="985" y="708" class="small" text-anchor="start"><tspan x="985" dy="0">Business call</tspan></text>
+<path d="M1110 760 L1175 760 L1175 615 L1225 615" fill="none" stroke="#4277aa" stroke-width="2" marker-end="url(#blue)" marker-start="url(#blue)"/>
+<text x="1305" y="738" class="small" text-anchor="middle"><tspan x="1305" dy="0">Scoped access;</tspan><tspan x="1305" dy="22">explicit consistency</tspan></text>
+<text x="75" y="746" class="small" text-anchor="start"><tspan x="75" dy="0">Client must speak HTTP</tspan><tspan x="75" dy="24">or use a compatibility adapter.</tspan></text>
+<text x="75" y="806" class="sub" text-anchor="start"><tspan x="75" dy="0">TLS at ingress; configure target-side encryption as required.</tspan></text>
+<rect x="40" y="900" width="710" height="185" rx="20" fill="#f8f9fb" stroke="#34373b" stroke-width="1.4"/>
+<text x="65" y="937" class="label" text-anchor="start"><tspan x="65" dy="0">DELIVERY / automated rollout</tspan></text>
+<rect x="65" y="970" width="185" height="64" rx="20" fill="#e7d8f4" stroke="#34373b" stroke-width="1.7"/>
+<text x="157.5" y="1008.0" class="label" text-anchor="middle"><tspan x="157.5" dy="0">GitHub Actions</tspan></text>
+<rect x="305" y="970" width="160" height="64" rx="20" fill="#fff0ad" stroke="#34373b" stroke-width="1.7"/>
+<text x="385.0" y="1008.0" class="label" text-anchor="middle"><tspan x="385.0" dy="0">ECR image</tspan></text>
+<rect x="525" y="970" width="195" height="64" rx="20" fill="#d1ecd0" stroke="#34373b" stroke-width="1.7"/>
+<text x="622.5" y="1008.0" class="label" text-anchor="middle"><tspan x="622.5" dy="0">ECS revision</tspan></text>
+<path d="M255 1002 L300 1002" fill="none" stroke="#bb853b" stroke-width="2" marker-end="url(#orange)"/>
+<path d="M470 1002 L520 1002" fill="none" stroke="#bb853b" stroke-width="2" marker-end="url(#orange)"/>
+<text x="65" y="1061" class="small" text-anchor="start"><tspan x="65" dy="0">Build + test → publish image → deploy + verify health</tspan></text>
+<rect x="780" y="900" width="680" height="185" rx="20" fill="#f8f9fb" stroke="#34373b" stroke-width="1.4"/>
+<text x="805" y="937" class="label" text-anchor="start"><tspan x="805" dy="0">OBSERVE / feedback from production</tspan></text>
+<rect x="805" y="970" width="260" height="64" rx="20" fill="#f7d3d3" stroke="#34373b" stroke-width="1.7"/>
+<text x="935.0" y="1008.0" class="label" text-anchor="middle"><tspan x="935.0" dy="0">OpenTelemetry</tspan></text>
+<rect x="1150" y="970" width="280" height="64" rx="20" fill="#d1ecd0" stroke="#34373b" stroke-width="1.7"/>
+<text x="1290.0" y="1008.0" class="label" text-anchor="middle"><tspan x="1290.0" dy="0">Telemetry backend</tspan></text>
+<path d="M1070 1002 L1145 1002" fill="none" stroke="#4c9061" stroke-width="2" marker-end="url(#green)"/>
+<text x="805" y="1061" class="small" text-anchor="start"><tspan x="805" dy="0">Container logs → CloudWatch Logs; correlate request / trace IDs</tspan></text>
+<text x="55" y="1125" class="sub" text-anchor="start"><tspan x="55" dy="0">Illustrative design only • Not an employer or client architecture • Arrows show logical interactions</tspan></text>
+</svg>
