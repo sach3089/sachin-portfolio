@@ -1,19 +1,61 @@
 ---
 title: From mainframe sockets to Spring Boot REST APIs
-description: A practical guide to sockets, TCP, REST, and endpoints—and the integration migration I worked on, from mainframe connections to a Spring Boot service on AWS ECS.
+description: A practical guide to sockets, TCP, REST, and endpoints—and a hypothetical migration from mainframe connections to a Spring Boot service on AWS ECS.
 date: 2026-10-25
 tags: Java, Networking, Mainframe, Spring Boot, AWS
 draft: false
 ---
-## The change I worked on
+## A migration scenario
 
-At Deloitte, I worked on modernizing legacy COBOL applications for Java-based execution on AWS using the Innovate runtime. My part included building a Spring Boot integration microservice from requirements through deployment on Amazon ECS, replacing legacy socket-based connections with REST endpoints, and creating its GitHub Actions CI/CD pipeline.
+Imagine a business application that exposes operations through a custom TCP socket protocol. A modernization project replaces that interface with a Spring Boot HTTP API deployed on Amazon ECS.
 
-But what does “replacing sockets with REST” actually mean? To understand the migration, we need to separate the network connection from the language applications speak over it.
+What does “replacing sockets with REST” actually mean? To understand the migration, we need to separate the network connection from the language applications speak over it.
 
-**The central idea: we changed the application interface, not the existence of network connections.** REST-style HTTP services still use networking underneath.
+**The central idea: change the application interface, not the existence of network connections.** REST-style HTTP services still use networking underneath.
 
-The account of my work above describes the project. The account-lookup examples, payloads, port numbers, code, and topology below are simplified teaching examples—not production contracts or a disclosure of client systems. Mainframe installations vary; the CICS example explains one common pattern rather than identifying the listener used in our environment.
+This guide describes a hypothetical architecture. The examples, payloads, code, and deployment choices are illustrative and do not describe an employer's or client's implementation. Mainframe installations vary; the CICS example below explains a publicly documented pattern.
+
+## End-to-end architecture: from a legacy contract to an HTTP API
+
+The two paths below show the same conceptual business operation before and after migration. They are alternative designs, not two hops of the same request. The actual caller also needs an HTTP implementation or a compatibility adapter; an existing socket client cannot simply change its destination and start speaking HTTP.
+
+```flow
+BEFORE · External caller :: Formats a custom record using the legacy contract
+TCP connection :: Sends bytes to a listener on an agreed host and port
+Mainframe listener / application :: Frames, decodes, and routes the request
+Business operation + data access :: Executes the operation within its transaction boundary
+Response to the caller :: Encodes a response record and sends it through the connection
+```
+
+```flow
+AFTER · HTTP-capable caller :: Sends an authenticated HTTPS request with a defined API contract
+Application Load Balancer :: Example HTTPS ingress: terminates TLS and routes to healthy targets
+ECS service · private application tasks :: Runs Spring Boot containers; target security groups restrict ingress
+Spring Boot API boundary :: Authenticates / authorizes the caller, validates input, and maps errors
+Application service + adapters :: Executes business logic and translates downstream contracts
+Database or downstream service :: Uses scoped credentials and an explicit consistency model
+HTTP response to the caller :: Returns a representation and appropriate status through the ingress
+```
+
+The ingress and private-task arrangement are example deployment choices. Configure target-side encryption as required; TLS termination at the load balancer does not automatically encrypt the next hop. A valid authentication token also does not replace authorization for a particular resource.
+
+Two supporting paths make this service deployable and operable:
+
+```flow
+DELIVERY · Source change :: A GitHub commit triggers a build workflow
+Build + test :: Compile and verify the application, then build a container image
+Amazon ECR :: Store the versioned container image
+ECS deployment :: Update the task definition / service and check rollout health
+```
+
+```flow
+OBSERVABILITY · Spring Boot service :: Emit telemetry with request / trace context and redact sensitive fields
+Logs :: Send configured container stdout / stderr to CloudWatch Logs
+Traces + metrics :: Route OpenTelemetry signals through an optional collector to compatible backends
+Investigation + feedback :: Correlate requests, diagnose failures, and use findings for the next change
+```
+
+ECR, the collector, and telemetry routing are illustrative components, not a record of any organization's infrastructure. Instrumentation and export configuration are required; deploying to ECS does not automatically produce complete distributed traces.
 
 ## 1. What is a socket?
 
@@ -86,7 +128,7 @@ A socket protocol can be efficient and entirely appropriate. Its age does not au
 
 An HTTP API gives consumers a familiar request/response envelope and tooling. It can make contracts, validation, access control, and diagnostics easier to standardize. The tradeoff is additional protocol overhead and a different failure model; changing the interface does not automatically make the business operation faster or safer.
 
-**The goal of my migration was to move the integration boundary to a Spring Boot REST service on AWS while retaining the required business behavior.**
+**The goal is to move the integration boundary to a Spring Boot REST service on AWS while retaining the required business behavior.**
 
 ## 5. What are HTTP, REST, an API, and an endpoint?
 
@@ -136,9 +178,9 @@ HTTP/3 uses QUIC over UDP instead, so “HTTP always uses TCP” would be inaccu
 
 Also, **stateless requests do not mean opening a new network connection for every request**. HTTP connections may be reused. Statelessness means the server does not require conversational client-session context from a previous request to understand the current one; it does not mean the service cannot use a database.
 
-## 7. How I approached the migration
+## 7. How to approach the migration
 
-My scope was broader than adding a controller. I built the integration microservice, repointed interfaces, deployed it on ECS, and created its delivery pipeline. The following breakdown explains the engineering concerns in that kind of migration; it is not a claim that every illustrative mechanism below was used unchanged in our implementation.
+Treat the work as a contract migration, not just a new controller. The following steps describe engineering concerns for the hypothetical system above.
 
 ### Understand the old contract before designing the new one
 
@@ -157,15 +199,15 @@ Integration adapters :: Translate downstream contracts
 Downstream systems :: Execute the required operation
 ```
 
-### Preserve behavior while repointing dependencies
+### Preserve behavior while changing dependencies
 
-My modernization work included repointing mainframe Db2 interfaces to Db2 LUW pureScale, migrating MQ interfaces to Amazon SQS, and moving NDS/CICS interface handling toward the integration microservice. These are related changes, but a database migration, queue migration, and HTTP boundary migration are not interchangeable tasks.
+A socket interface migration may happen alongside a database or messaging migration. Keep those contracts separate: changing an HTTP boundary does not by itself require changing the database or queue technology.
 
-For example, moving from MQ to SQS requires checking the actual queue type, delivery guarantees, duplicate handling, and transaction expectations. Replacing a queue name alone does not preserve those semantics. Similarly, database repointing requires checking compatibility and transactional behavior beyond a connection URL.
+If dependencies also change, compare delivery guarantees, duplicate handling, data types, and transaction expectations. Replacing a queue name or database connection URL alone does not guarantee equivalent behavior.
 
 ### Deploy the service and automate delivery
 
-The Spring Boot service ran on AWS ECS, and I created its GitHub Actions build/deployment pipeline. A typical HTTP deployment can place an Application Load Balancer in front of ECS tasks for routing and health checks. That load balancer is an illustrative option here, not a verified detail of my project's topology.
+In this example, a Spring Boot container runs as part of an ECS service. A GitHub Actions workflow builds and tests the code, publishes the image to ECR, and deploys the new task revision. An Application Load Balancer is one possible HTTP ingress, with health checks configured for the application's readiness behavior.
 
 ```flow
 Caller :: Sends an HTTPS request
@@ -180,7 +222,7 @@ ECS manages container tasks; it does not implement REST or automatically make op
 
 ## 8. A small Spring Boot example
 
-This is a deliberately minimal controller illustrating the HTTP boundary, not production code or the actual account service from my work. The example assumes a lookup service and response type exist.
+This is a deliberately minimal controller illustrating the HTTP boundary, not a production-ready account service. The example assumes a lookup service and response type exist.
 
 ```java
 @RestController
@@ -215,10 +257,10 @@ A method name such as lookup is not evidence that an operation is read-only. Use
 - **Observability:** request identifiers, traces, logs, and metrics help connect an incoming request to downstream work. Avoid recording confidential payloads or credentials in logs.
 - **Rollout:** validate representative traffic, compare behavior, and have a rollback plan. Deployment success is not proof of business correctness.
 
-## What I took away
+## The main takeaway
 
 The most useful way to understand this migration is as a change of contract and responsibility. A socket gives programs a channel. A custom protocol defines how they use its bytes. HTTP standardizes the message envelope. A REST-style API organizes the operations and representations consumers see.
 
-Spring Boot helped expose that interface, ECS provided the container runtime, and GitHub Actions automated delivery. The engineering work was in connecting those pieces while preserving the behavior callers relied on.
+In this architecture, Spring Boot exposes the interface, ECS runs the containers, and GitHub Actions automates delivery. The engineering work is connecting those pieces while preserving the behavior callers rely on.
 
 **Modernization is complete when the new interface is understandable, operable, and correct—not merely when it returns HTTP 200.**
